@@ -31,7 +31,11 @@ namespace niepce
 // Global typedefs
 // ---------------------------------------------------------------------------
 */
-typedef double       Float;
+#ifdef NIEPCE_FLOAT_IS_DOUBLE
+typedef double Float;
+#else  
+typedef float  Float;
+#endif // NIEPCE_FLOAT_IS_DOUBLE
 // ---------------------------------------------------------------------------
 // Class forward declarations
 // ---------------------------------------------------------------------------
@@ -53,6 +57,7 @@ class XorShift;
 class Sampler;
 class RandomSampler;
 class Shape;
+struct TriangleMesh;
 class Triangle;
 template <typename ReturnType> class Texture;
 template <typename ReturnType> class ConstantTexure;

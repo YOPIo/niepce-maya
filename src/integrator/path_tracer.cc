@@ -1,5 +1,4 @@
 #include "path_tracer.h"
-#include "../filter/filter.h"
 /*
 // ---------------------------------------------------------------------------
 */
@@ -73,8 +72,8 @@ auto PathTracer::Render (const Scene& scene) const -> void
 
   WriteImage("test.png", image);
   SaveAs ("final_without_filter.png", *image);
-  auto filtered = NonLocalMeansFilter (image, 0.2, 0.2);
-  SaveAs ("final_with_filter.png", *filtered);
+  // auto filtered = NonLocalMeansFilter (image, 0.2, 0.2);
+  // SaveAs ("final_with_filter.png", *filtered);
 
   return ;
 }

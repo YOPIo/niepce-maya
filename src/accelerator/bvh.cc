@@ -100,16 +100,19 @@ BVH::~BVH ()
 auto BVH::WorldBounds () const -> Bounds3f
 {
   // TODO: Implementation
+  return Bounds3f ();
 }
 
 auto BVH::LocalBounds () const -> Bounds3f
 {
   // TODO: Implementation
+  return Bounds3f ();
 }
 
 auto BVH::SurfaceArea () const -> Float
 {
   // TODO: Implementation
+  return -1.0;
 }
 
 auto BVH::IsIntersect

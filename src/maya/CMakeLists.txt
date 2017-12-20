@@ -14,6 +14,7 @@ add_library (${PROJECT_NAME} SHARED ${MAYA_SOURCE_FILES})
 
 target_link_libraries (
   ${PROJECT_NAME}
+  ${MAYA_LIBRARIES}
   Integrator
   Scene  
   Accelerator

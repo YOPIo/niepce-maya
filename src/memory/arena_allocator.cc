@@ -9,7 +9,13 @@ namespace niepce
 */
 auto AllocateAligned (size_t bytes) -> void*
 {
-  return memalign (kMemoryAlignment, bytes);
+#ifdef _WIN64
+    return _aligned_malloc (bytes, kMemoryAlignment);
+#else
+    return memalign (kMemoryAlignment, bytes);
+#endif // _WIN64
+
+
 
   /*
   void* ptr = nullptr;

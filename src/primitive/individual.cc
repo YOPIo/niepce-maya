@@ -37,21 +37,24 @@ Individual::~Individual ()
 */
 auto Individual::WorldBounds () const -> Bounds3f
 {
-
+    // Todo : implementation
+    return Bounds3f ();
 }
 /*
 // ---------------------------------------------------------------------------
 */
 auto Individual::LocalBounds () const -> Bounds3f
 {
-
+    // Todo : implementation
+    return Bounds3f ();
 }
 /*
 // ---------------------------------------------------------------------------
 */
 auto Individual::SurfaceArea () const -> Float
 {
-
+    // Todo : implementation
+    return -1.0;
 }
 /*
 // ---------------------------------------------------------------------------

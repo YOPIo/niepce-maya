@@ -3,9 +3,12 @@
 /*
 // ---------------------------------------------------------------------------
 */
+#include "../core/niepce.h"
+#include "../core/geometry.h"
 #include <maya/MGlobal.h>
 #include <maya/MStatus.h>
 #include <maya/MString.h>
+#include <maya/MFloatVector.h>
 /*
 // ---------------------------------------------------------------------------
 */
@@ -19,7 +22,7 @@
     MStatus s = (status);\
     if (s != MStatus::kSuccess)\
     {\
-        MGlobal::displayError ("Niepce :" + MString ((msg)));\
+        MGlobal::displayError ("Niepce : " + MString ((msg)));\
     }\
 }
 /*
@@ -40,7 +43,16 @@ static const MString kAll = kHyperShade + ":" + kRenderNode + ":" + kViewport;
 /*
 // ---------------------------------------------------------------------------
 */
+inline auto ToNiepceVector3 (const MFloatVector& v) -> niepce::Vector3f
+{
+    return niepce::Vector3f (static_cast <niepce::Float> (v.x),
+                             static_cast <niepce::Float> (v.y),
+                             static_cast <niepce::Float> (v.z));
 }
+/*
+// ---------------------------------------------------------------------------
+*/
+} // namespace plugins
 /*
 // ---------------------------------------------------------------------------
 */

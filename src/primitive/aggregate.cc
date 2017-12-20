@@ -24,17 +24,26 @@ Aggregate::~Aggregate ()
 // ---------------------------------------------------------------------------
 */
 auto Aggregate::WorldBounds () const -> Bounds3f
-{}
+{
+    // TODO : implementation
+    return Bounds3f ();
+}
 /*
 // ---------------------------------------------------------------------------
 */
 auto Aggregate::LocalBounds () const -> Bounds3f
-{}
+{
+    // TODO : implementation
+    return Bounds3f ();
+}
 /*
 // ---------------------------------------------------------------------------
 */
 auto Aggregate::SurfaceArea () const -> Float
-{}
+{
+    // TODO : implementation
+    return -1.0;
+}
 /*
 // ---------------------------------------------------------------------------
 */

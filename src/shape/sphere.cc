@@ -155,6 +155,8 @@ const -> bool
 auto Sphere::Sample (const Sample2f& sample) const -> Interaction
 {
   // TODO: implementation
+  return Interaction ();
+  
 }
 /*
 // ---------------------------------------------------------------------------
@@ -162,6 +164,7 @@ auto Sphere::Sample (const Sample2f& sample) const -> Interaction
 auto Sphere::Pdf () const -> Float
 {
   // TODO: implementation
+  return -1.0;
 }
 /*
 // ---------------------------------------------------------------------------

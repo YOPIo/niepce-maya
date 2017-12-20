@@ -165,8 +165,9 @@ auto operator * (const Transform& t, const Ray& ray) -> Ray
 // ---------------------------------------------------------------------------
 */
 auto operator * (const Transform& t, const Bounds3f& bbox) -> Bounds3f
-{
-  // TODO:
+{  
+  // Todo : implementation
+  return Bounds3f ();
 }
 /*
 // ---------------------------------------------------------------------------

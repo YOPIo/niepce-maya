@@ -20,6 +20,32 @@ class Camera
  public:
   Camera ()
   {};
+
+  Camera
+  (
+    const Point3f&  position,
+    const Vector3f& direction,
+    const Vector3f& up
+  )
+  {
+      Vector3f u, v, w;
+      Float theta = 35 * kPi / 180.0;
+      Float half_height = std::tan (theta / 2);
+      Float half_width  = 16.0 / 9.0 * half_height;
+
+      origin_ = position;
+      w = Normalize (direction);
+      u = Normalize (Cross (up, w));
+      v = Cross (w, u);
+
+      lower_left_corner_ = Point3f (-half_width, -half_height, -1.0);
+      lower_left_corner_ = Point3f (origin_ + -1.0 * u * half_width  +
+          -1.0 * v * half_height +
+          -1.0 * w);
+      horizontal_ = 2.0 * half_width  * u;
+      vertical_   = 2.0 * half_height * v;    
+  }
+
   Camera
   (
       const Point3f&  position,

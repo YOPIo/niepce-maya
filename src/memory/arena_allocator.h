@@ -9,6 +9,7 @@
 #include <malloc.h>
 #include <list>
 #include <utility>
+#include <algorithm> // for windows to use std::max () and std::min ()
 /*
 // ---------------------------------------------------------------------------
 */
@@ -128,7 +129,7 @@ class ArenaAllocator
       if (!current_block_)
       {
         current_alloc_size_ = std::max (num_bytes, block_size_);
-        current_block_      = AllocateAligned<uint8_t> (current_alloc_size_);
+        current_block_      = AllocateAligned <uint8_t> (current_alloc_size_);
       }
       current_block_pos_ = 0;
     }

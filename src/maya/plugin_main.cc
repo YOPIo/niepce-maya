@@ -50,7 +50,7 @@ auto initializePlugin (MObject obj) -> MStatus
 
 
     // Register the renderer as Niepce Renderer
-    plugins::RenderView::RegistserRenderer ();
+    plugins::NiepceRenderView::RegistserRenderer ();
 
 
     // Register surface shaders
@@ -83,7 +83,7 @@ auto uninitializePlugin (MObject obj) -> MStatus
 
 
     // Unregister renderer
-    plugins::RenderView::UnregisterRenderer ();
+    plugins::NiepceRenderView::UnregisterRenderer ();
 
 
     // plugin.deregisterDisplayFilter ("Niepce");    
