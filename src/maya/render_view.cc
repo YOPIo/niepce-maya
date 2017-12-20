@@ -14,6 +14,7 @@
 #include <maya/MHWGeometry.h>
 #include <maya/MItDependencyGraph.h>
 #include <maya/MItDependencyNodes.h>
+#include <maya/MItSelectionList.h>
 #include <maya/MIOStream.h>
 #include <maya/MSelectionList.h>
 #include <maya/MPlug.h>
@@ -21,7 +22,11 @@
 /*
 // ---------------------------------------------------------------------------
 */
+#include "../camera/camera.h"
 #include "../shape/triangle.h"
+#include "../primitive/individual.h"
+#include "../scene/scene.h"
+#include "../material/matte.h"
 /*
 // ---------------------------------------------------------------------------
 */
@@ -97,6 +102,12 @@ auto NiepceRenderView::GetResolution () -> std::pair <uint32_t, uint32_t>
 auto NiepceRenderView::ConstructSceneForNiepce () -> MStatus
 {    
     MStatus status;
+    niepce::Scene scene;
+
+    std::vector <niepce::IndividualPtr> primitives;    
+
+    // Debug
+    const niepce::MaterialPtr mat (niepce::CreateMatte (niepce::Spectrum (0.75, 0.75, 0.75, 1.0)));
 
     // Get all shading engines at the current scene
     MItDependencyNodes shading_engines (MFn::kShadingEngine);
@@ -221,35 +232,78 @@ auto NiepceRenderView::ConstructSceneForNiepce () -> MStatus
                              {},             // Index of normals
                              {});            // Index of texcoords
 
+            // Create individual primitive
+            for (const auto& shape : triangles)
+            {
+                niepce::IndividualPtr individual
+                    = niepce::CreateIndividual (shape, mat, nullptr);
+                primitives.push_back (individual);
+            }
+
             // Free memories                             
             delete [] positions;
         }        
     }
+
+    MGlobal::displayInfo ( ("The number of primitives : " + std::to_string (primitives.size ())).c_str () );
 
     return MStatus::kSuccess;
 }
 /*
 // ---------------------------------------------------------------------------
 */
-auto NiepceRenderView::GetRenderableCamera (MDagPath& dag) -> MStatus
+auto NiepceRenderView::GetRenderableCamera (MDagPath& path) -> MStatus
 {        
-    MStatus status;
-
-    // List up all cameras
-    MItDependencyNodes camera_nodes (MFn::kCamera);
-
-    for (; !camera_nodes.isDone (); camera_nodes.next ())
+    MItDependencyNodes cameras_nodes (MFn::kCamera);
+    for (; !cameras_nodes.isDone (); cameras_nodes.next ())
     {
-        // Is current camera renderable.
-        MFnCamera camera (camera_nodes.thisNode (), &status);
-        MPlug     plug   (camera.findPlug ("renderable", status));
-        if (plug.asBool ())
-        {
-            dag = camera.dagPath ();
+        
+        MFnCamera camera (cameras_nodes.thisNode ());
+        // Find renderable camera
+        if (camera.findPlug ("renderable").asBool ())
+        {            
+            camera.getPath (path);
+            MGlobal::displayInfo ( path.fullPathName () );    
             return MStatus::kSuccess;
         }        
     }
     return MStatus::kFailure;
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto NiepceRenderView::GetNiepceCamera
+(
+    niepce::Camera* camera,
+    const MDagPath& path
+)
+-> MStatus
+{
+    // Create MFnCamera to get camera position, direciton and up vectors
+    MStatus status;
+    const MFnCamera m_camera (path, &status);
+    NIEPCE_CHECK_MSTATUS (status, "Failed to create MFnCamera.");
+
+    // Get eye point in world system coordinate
+    const MPoint eye_position (m_camera.eyePoint (MSpace::kWorld, &status));
+    NIEPCE_CHECK_MSTATUS (status, "Failed to get eye point of camera.");
+
+    // Get camera direction in world system coordinate
+    const MVector view_direction (m_camera.viewDirection (MSpace::kWorld, &status));
+    NIEPCE_CHECK_MSTATUS (status, "Failed to get view direction of camera.");
+
+    // Get camera up vector in world system coordinate
+    const MVector up_direction (m_camera.upDirection (MSpace::kWorld, &status));
+    NIEPCE_CHECK_MSTATUS (status, "Faild to get up direction of camera.");
+
+    // Convert MPoint to niepce::Point3f and MVector to niepce::Vector3f
+    const niepce::Point3f  position  (ToNiepcePoint3 (eye_position));
+    const niepce::Vector3f direction (ToNiepceVector3 (view_direction));
+    const niepce::Vector3f up        (ToNiepceVector3 (up_direction));
+
+    *camera = niepce::Camera (position, direction, up);
+
+    return MStatus::kSuccess;
 }
 /*
 // ---------------------------------------------------------------------------

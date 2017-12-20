@@ -52,8 +52,14 @@ public:
     // Get first renderable camera
     //  - MStatus::kSuccess : Found renderable camera
     //  - MStatus::kFailure : Could not find renderable camera
-    static auto GetRenderableCamera (MDagPath& dag) -> MStatus;
+    static auto GetRenderableCamera (MDagPath& path) -> MStatus;
 
+    static auto GetNiepceCamera
+    (
+        niepce::Camera* camera,
+        const MDagPath& path
+    )
+    -> MStatus;
 
     /* NiepceRenderView private methods */
 private:
@@ -71,8 +77,7 @@ private:
         const std::vector <uint32_t>& normal_indices,
         const std::vector <uint32_t>& texcoord_indices
     )
-    -> void;
-
+    -> void;   
 };
 /*
 // ---------------------------------------------------------------------------

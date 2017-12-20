@@ -8,6 +8,10 @@
 /*
 // ---------------------------------------------------------------------------
 */
+#include "../camera/camera.h"
+/*
+// ---------------------------------------------------------------------------
+*/
 namespace plugins
 {
 /*
@@ -23,6 +27,31 @@ auto RendererCommand::creator () -> void*
 // ---------------------------------------------------------------------------
 */
 auto RendererCommand::doIt (const MArgList& args) -> MStatus
+{
+    MStatus status;
+    MDagPath path;
+    status = NiepceRenderView::GetRenderableCamera (path);
+    NIEPCE_CHECK_MSTATUS (status, "Failed to get renderable camera.");
+    MGlobal::displayInfo (path.fullPathName ());
+
+    niepce::Camera camera;
+    status = NiepceRenderView::GetNiepceCamera (&camera, path);
+    NIEPCE_CHECK_MSTATUS (status, "Faild to generate niepce::Camera.");
+
+    MString str ( (std::to_string (camera.origin_.x) + ", "
+                 + std::to_string (camera.origin_.y) + ", "
+                 + std::to_string (camera.origin_.z) + "").c_str ());
+    MGlobal::displayInfo (str);
+
+    // Test
+    NiepceRenderView::ConstructSceneForNiepce ();
+
+    return MStatus::kSuccess;
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto RendererCommand::BeginRendering () -> void
 {
     MStatus status;
 
@@ -77,18 +106,12 @@ auto RendererCommand::doIt (const MArgList& args) -> MStatus
                                    resolution.first - 1,   // Right
                                    0,                      // Bottom
                                    resolution.second - 1); // Top
-    NIEPCE_CHECK_MSTATUS (status, "");
+                                   NIEPCE_CHECK_MSTATUS (status, "");
 
     // Call endRender() to signal the Render View that all
     // image data has been sent.
     status = MRenderView::endRender ();
-    NIEPCE_CHECK_MSTATUS (status, "");
-
-
-    // Test
-    NiepceRenderView::ConstructSceneForNiepce ();
-
-    return MStatus::kSuccess;
+    NIEPCE_CHECK_MSTATUS (status, "");   
 }
 /*
 // ---------------------------------------------------------------------------

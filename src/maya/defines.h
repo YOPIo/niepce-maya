@@ -52,6 +52,24 @@ inline auto ToNiepceVector3 (const MFloatVector& v) -> niepce::Vector3f
 /*
 // ---------------------------------------------------------------------------
 */
+inline auto ToNiepceVector3 (const MVector& v) -> niepce::Vector3f
+{
+    return niepce::Vector3f (static_cast <niepce::Float> (v.x),
+                             static_cast <niepce::Float> (v.y),
+                             static_cast <niepce::Float> (v.z));
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+inline auto ToNiepcePoint3 (const MPoint& p) -> niepce::Point3f
+{
+    return niepce::Point3f (static_cast <niepce::Float> (p.x),
+                            static_cast <niepce::Float> (p.y),
+                            static_cast <niepce::Float> (p.z));
+}
+/*
+// ---------------------------------------------------------------------------
+*/
 } // namespace plugins
 /*
 // ---------------------------------------------------------------------------

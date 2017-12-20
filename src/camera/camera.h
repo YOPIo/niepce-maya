@@ -99,7 +99,7 @@ class Camera
 
 
   /* Camera private data */
- protected:
+ public:
   Point3f  origin_;
   Point3f  lower_left_corner_;
   Vector3f horizontal_;

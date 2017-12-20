@@ -17,6 +17,7 @@ class Lambert : public Bxdf
 {
   /* Lambert constructors */
 public:
+  Lambert () = delete;
   Lambert (const Spectrum& reflectance);
 
 

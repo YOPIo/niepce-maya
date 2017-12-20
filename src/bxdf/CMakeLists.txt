@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 
 set (BXDF_SOURCE_FILES
+	"bxdf.cc"
     "bsdf.cc"
     "bsdf_utils.cc"
     "fresnel.cc"

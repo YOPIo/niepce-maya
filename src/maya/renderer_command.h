@@ -32,6 +32,7 @@ public:
     auto operator = (      RendererCommand&& creator) -> RendererCommand&
         = default;
 
+    /* RendererCommand public methods */
 public:
     // This method is called by MFnPlugin.registerCommand ()
     // Return pointer
@@ -40,7 +41,12 @@ public:
     // This method is called when mel command named niepceBeginPreRendering
     // at the Maya.
     // Perform pre-rendering.
-    virtual auto doIt (const MArgList& args) -> MStatus override final;
+    auto doIt (const MArgList& args) -> MStatus override final;
+
+
+    /* RendererCommand private methods */
+private:
+    auto BeginRendering () -> void;
 
 
 public:
