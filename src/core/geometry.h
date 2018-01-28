@@ -1584,12 +1584,12 @@ class BoundingBox2
 
   /* Boundingbox2 public methods */
  public:
-  auto Max () const -> Point2<T>
+  auto GetMax () const -> Point2<T>
   {
     return max_;
   }
 
-  auto Min () const -> Point2<T>
+  auto GetMin () const -> Point2<T>
   {
     return min_;
   }

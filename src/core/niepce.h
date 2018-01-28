@@ -101,6 +101,7 @@ typedef Matrix4x4<Float>    Matrix4x4f;
 typedef Matrix4x4<int>      Matrix4x4i;
 typedef BoundingBox2<Float> Bounds2f;
 typedef BoundingBox2<int>   Bounds2i;
+typedef BoundingBox2<uint32_t> Bounds2u32i;
 typedef BoundingBox3<Float> Bounds3f;
 typedef BoundingBox3<int>   Bounds3i;
 typedef Float    Sample1f;

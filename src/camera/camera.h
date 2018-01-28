@@ -29,7 +29,7 @@ class Camera
   )
   {
       Vector3f u, v, w;
-      Float theta = 35 * kPi / 180.0;
+      Float theta = 45.0 * kPi / 180.0;
       Float half_height = std::tan (theta / 2);
       Float half_width  = 16.0 / 9.0 * half_height;
 

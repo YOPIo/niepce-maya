@@ -18,10 +18,10 @@
 #include <maya/MIOStream.h>
 #include <maya/MSelectionList.h>
 #include <maya/MPlug.h>
-#include <string>
 /*
 // ---------------------------------------------------------------------------
 */
+#include "../core/niepce.h"
 #include "../camera/camera.h"
 #include "../shape/triangle.h"
 #include "../primitive/individual.h"
@@ -99,10 +99,9 @@ auto NiepceRenderView::GetResolution () -> std::pair <uint32_t, uint32_t>
 /*
 // ---------------------------------------------------------------------------
 */
-auto NiepceRenderView::ConstructSceneForNiepce () -> MStatus
+auto NiepceRenderView::ConstructSceneForNiepce (niepce::Scene* scene) -> MStatus
 {    
     MStatus status;
-    niepce::Scene scene;
 
     std::vector <niepce::IndividualPtr> primitives;    
 
@@ -232,6 +231,25 @@ auto NiepceRenderView::ConstructSceneForNiepce () -> MStatus
                              {},             // Index of normals
                              {});            // Index of texcoords
 
+            // Debug
+            for (const auto& t : triangles)
+            {
+                std::tuple <niepce::Point3f, niepce::Point3f, niepce::Point3f> tri
+                    = dynamic_cast <niepce::Triangle*> (t.get ())->GetPosition ();
+
+                MString str0 ( (std::to_string (std::get <0> (tri).x) + ", "
+                    + std::to_string (std::get <0> (tri).y) + ","
+                    + std::to_string (std::get <0> (tri).z) + " : ").c_str () );
+                MString str1 ( (std::to_string (std::get <1> (tri).x) + ", "
+                    + std::to_string (std::get <1> (tri).y) + ","
+                    + std::to_string (std::get <1> (tri).z) + " : ").c_str () );
+                MString str2 ( (std::to_string (std::get <2> (tri).x) + ", "
+                    + std::to_string (std::get <2> (tri).y) + ","
+                    + std::to_string (std::get <2> (tri).z)).c_str () );
+
+                MGlobal::displayInfo (str0 + str1 + str2);
+            }
+
             // Create individual primitive
             for (const auto& shape : triangles)
             {
@@ -247,25 +265,33 @@ auto NiepceRenderView::ConstructSceneForNiepce () -> MStatus
 
     MGlobal::displayInfo ( ("The number of primitives : " + std::to_string (primitives.size ())).c_str () );
 
-    return MStatus::kSuccess;
+    *scene = niepce::Scene (primitives);
+
+    return status;
 }
 /*
 // ---------------------------------------------------------------------------
+// Find a renderable camera
+// If found  : MStatus::kSuccess
+// otherwize : MStatus::kFailure
+// ---------------------------------------------------------------------------
 */
-auto NiepceRenderView::GetRenderableCamera (MDagPath& path) -> MStatus
-{        
+auto NiepceRenderView::GetRenderableCamera (MDagPath* path) -> MStatus
+{    
+    // Get all camera in the scene
     MItDependencyNodes cameras_nodes (MFn::kCamera);
+
+    // Loop over the camera in the scene
     for (; !cameras_nodes.isDone (); cameras_nodes.next ())
     {
-        
         MFnCamera camera (cameras_nodes.thisNode ());
-        // Find renderable camera
+        // Check renderable parameter as true or not.
         if (camera.findPlug ("renderable").asBool ())
-        {            
-            camera.getPath (path);
-            MGlobal::displayInfo ( path.fullPathName () );    
+        {
+            camera.getPath (*path);
+            MGlobal::displayInfo (path->fullPathName ());
             return MStatus::kSuccess;
-        }        
+        }      
     }
     return MStatus::kFailure;
 }
@@ -274,36 +300,37 @@ auto NiepceRenderView::GetRenderableCamera (MDagPath& path) -> MStatus
 */
 auto NiepceRenderView::GetNiepceCamera
 (
-    niepce::Camera* camera,
-    const MDagPath& path
+    const MDagPath& path,
+    MStatus* status
 )
--> MStatus
+-> std::shared_ptr <niepce::Camera>
 {
-    // Create MFnCamera to get camera position, direciton and up vectors
-    MStatus status;
-    const MFnCamera m_camera (path, &status);
-    NIEPCE_CHECK_MSTATUS (status, "Failed to create MFnCamera.");
+    // Create MFnCamera to get camera position, direciton and up vectors    
+    const MFnCamera m_camera (path, status);
+    NIEPCE_CHECK_MSTATUS (*status, "Failed to create MFnCamera.");
 
     // Get eye point in world system coordinate
-    const MPoint eye_position (m_camera.eyePoint (MSpace::kWorld, &status));
-    NIEPCE_CHECK_MSTATUS (status, "Failed to get eye point of camera.");
+    const MPoint eye_position (m_camera.eyePoint (MSpace::kWorld, status));
+    NIEPCE_CHECK_MSTATUS (*status, "Failed to get eye point of camera.");
 
     // Get camera direction in world system coordinate
-    const MVector view_direction (m_camera.viewDirection (MSpace::kWorld, &status));
-    NIEPCE_CHECK_MSTATUS (status, "Failed to get view direction of camera.");
+    const MVector view_direction (m_camera.viewDirection (MSpace::kWorld, status));
+    NIEPCE_CHECK_MSTATUS (*status, "Failed to get view direction of camera.");
 
     // Get camera up vector in world system coordinate
-    const MVector up_direction (m_camera.upDirection (MSpace::kWorld, &status));
-    NIEPCE_CHECK_MSTATUS (status, "Faild to get up direction of camera.");
+    const MVector up_direction (m_camera.upDirection (MSpace::kWorld, status));
+    NIEPCE_CHECK_MSTATUS (*status, "Faild to get up direction of camera.");
 
     // Convert MPoint to niepce::Point3f and MVector to niepce::Vector3f
     const niepce::Point3f  position  (ToNiepcePoint3 (eye_position));
     const niepce::Vector3f direction (ToNiepceVector3 (view_direction));
     const niepce::Vector3f up        (ToNiepceVector3 (up_direction));
 
-    *camera = niepce::Camera (position, direction, up);
-
-    return MStatus::kSuccess;
+    std::shared_ptr <niepce::Camera> camera
+        (std::make_shared <niepce::Camera> (position,
+                                            direction,
+                                            up));
+    return std::move (camera);
 }
 /*
 // ---------------------------------------------------------------------------

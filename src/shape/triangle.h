@@ -120,6 +120,14 @@ public:
 
   auto ToString () const -> std::string override final;
 
+  // Debug methods
+  auto GetPosition () const -> std::tuple <Point3f, Point3f, Point3f>
+  {  
+    return std::make_tuple (mesh_->positions[pos_idx_[0]],
+                            mesh_->positions[pos_idx_[1]],
+                            mesh_->positions[pos_idx_[2]]);
+  }
+
 
   /* Triangle private method */
 private:

@@ -47,19 +47,19 @@ public:
     static auto GetResolution () -> std::pair <uint32_t, uint32_t>;
       
     //  
-    static auto ConstructSceneForNiepce () -> MStatus;
+    static auto ConstructSceneForNiepce (niepce::Scene* scene) -> MStatus;
 
     // Get first renderable camera
     //  - MStatus::kSuccess : Found renderable camera
     //  - MStatus::kFailure : Could not find renderable camera
-    static auto GetRenderableCamera (MDagPath& path) -> MStatus;
+    static auto GetRenderableCamera (MDagPath* path) -> MStatus;
 
     static auto GetNiepceCamera
     (
-        niepce::Camera* camera,
-        const MDagPath& path
+        const MDagPath& path,
+        MStatus* status
     )
-    -> MStatus;
+    -> std::shared_ptr <niepce::Camera>;
 
     /* NiepceRenderView private methods */
 private:

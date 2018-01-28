@@ -3,6 +3,7 @@ set (MAYA_SOURCE_FILES
   "matte_shader.cc"
   "renderer_command.cc"
   "render_view.cc"
+  "maya_tracer.cc"
 )
 
 find_package (Maya REQUIRED)

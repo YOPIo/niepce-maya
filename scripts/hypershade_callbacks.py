@@ -115,7 +115,7 @@ def registerHypershade ():
     hypershadeCallbacks = [("hyperShadePanelBuildCreateMenu",       hyperShadePanelBuildCreateMenuCallback),
                            ("hyperShadePanelBuildCreateSubMenu",    hyperShadePanelBuildCreateSubMenuCallback),
                            ("hyperShadePanelPluginChange",          hyperShadePanelPluginChangeCallback),
-                           ("createRenderNodeSelectNodeCategories", createRenderNodeSelectNodeCategoriesCallback),
+                           #("createRenderNodeSelectNodeCategories", createRenderNodeSelectNodeCategoriesCallback),
                            ("createRenderNodePluginChange",         createRenderNodePluginChangeCallback),
                            ("renderNodeClassification",             renderNodeClassificationCallback),
                            ("createRenderNodeCommand",              createRenderNodeCommandCallback),

@@ -1,14 +1,32 @@
-#include "defines.h"
-#include "renderer_command.h"
-#include "render_view.h"
+/*
+// ---------------------------------------------------------------------------
+// 
+// ---------------------------------------------------------------------------
+*/
 #include <maya/MDagPath.h>
 #include <maya/MGlobal.h>
 #include <maya/MRenderView.h>
+#include <maya/MString.h>
 #include <string>
+#include <algorithm>
+/*
+// ---------------------------------------------------------------------------
+*/
+#include "defines.h"
+#include "renderer_command.h"
+#include "render_view.h"
+#include "maya_tracer.h"
 /*
 // ---------------------------------------------------------------------------
 */
 #include "../camera/camera.h"
+#include "../sampler/random_sampler.h"
+#include "../scene/scene.h"
+/*
+// ---------------------------------------------------------------------------
+*/
+#define NOMINMAX
+#include <windows.h>
 /*
 // ---------------------------------------------------------------------------
 */
@@ -29,89 +47,98 @@ auto RendererCommand::creator () -> void*
 auto RendererCommand::doIt (const MArgList& args) -> MStatus
 {
     MStatus status;
-    MDagPath path;
-    status = NiepceRenderView::GetRenderableCamera (path);
-    NIEPCE_CHECK_MSTATUS (status, "Failed to get renderable camera.");
-    MGlobal::displayInfo (path.fullPathName ());
 
-    niepce::Camera camera;
-    status = NiepceRenderView::GetNiepceCamera (&camera, path);
+    // Get current camera
+    MDagPath path;
+    status = NiepceRenderView::GetRenderableCamera (&path);
+    NIEPCE_CHECK_MSTATUS (status, "Failed to get renderable camera.");
+    
+    // Create niepce::Camera for rendering
+    std::shared_ptr <niepce::Camera> camera
+        = NiepceRenderView::GetNiepceCamera (path, &status);
     NIEPCE_CHECK_MSTATUS (status, "Faild to generate niepce::Camera.");
 
-    MString str ( (std::to_string (camera.origin_.x) + ", "
-                 + std::to_string (camera.origin_.y) + ", "
-                 + std::to_string (camera.origin_.z) + "").c_str ());
-    MGlobal::displayInfo (str);
+    /*
+    // ----------------------------------------------------------------------
+    // Render-view update test (start)
+    // ----------------------------------------------------------------------
+    */
+    constexpr uint32_t kTileSize = 32;
+    const auto resolution = NiepceRenderView::GetResolution ();
 
-    // Test
-    NiepceRenderView::ConstructSceneForNiepce ();
+    const uint32_t num_tiles_width  = std::ceil ((double)resolution.first / (double)kTileSize);
+    const uint32_t num_tiles_height = std::ceil ((double)resolution.second / (double)kTileSize);
 
-    return MStatus::kSuccess;
-}
-/*
-// ---------------------------------------------------------------------------
-*/
-auto RendererCommand::BeginRendering () -> void
-{
-    MStatus status;
-
-    // Get rendering resolution
-    std::pair <uint32_t, uint32_t> resolution (NiepceRenderView::GetResolution ());
-
-    // Call doesRenderEditorExist() to make sure that a Render View exists.
-    // If this returns false, then Maya is operating in batch mode.
-    MRenderView::doesRenderEditorExist ();
-    NIEPCE_CHECK_MSTATUS (status, "");
-
-    // Call setCurrentCamera() to specify the name of the camera that is
-    // being rendered.
-    MDagPath camera;
-    status = NiepceRenderView::GetRenderableCamera (camera);
-    NIEPCE_CHECK_MSTATUS (status, "");
-    status = MRenderView::setCurrentCamera (MDagPath (camera));
-    NIEPCE_CHECK_MSTATUS (status, "");
-
-    // Call startRender() to inform the Render View that you are about to
-    // start sending either a full image or a region update.
-    status = MRenderView::startRender (resolution.first, resolution.second);
-    NIEPCE_CHECK_MSTATUS (status, "");
-
-
-    // Test
-    std::unique_ptr <RV_PIXEL []> pixels (new RV_PIXEL [resolution.first * resolution.second]);
-    for (int y = 0; y < resolution.second; ++y)
+    // Data
+    std::unique_ptr <RV_PIXEL []> pixels (new RV_PIXEL[kTileSize * kTileSize]);
+    for (uint32_t sy = 0; sy < kTileSize; ++sy)
     {
-        for (int x = 0; x < resolution.first; ++x)
+        for (uint32_t sx = 0; sx < kTileSize; ++sx)
         {
-            pixels[y * resolution.first + x].r = 100.0;
-            pixels[y * resolution.first + x].g = 20.0;
-            pixels[y * resolution.first + x].b = 5.0;
-            pixels[y * resolution.first + x].a = 1.0;
+            pixels[sy * kTileSize + sx].r = 30.0;
+            pixels[sy * kTileSize + sx].g = 30.0;
+            pixels[sy * kTileSize + sx].b = 30.0;
+            pixels[sy * kTileSize + sx].a = 1.0;
         }
     }
 
-    // The image or image region is sent to the Render View as a series of
-    // one or more tiles. For each tile, send the tile's image data using
-    // the updatePixels() method. Call the refresh() method to refresh
-    // the Render View after each tile has been sent.    
-    status = MRenderView::updatePixels (0,                    // Left
-                                        resolution.first - 1, // Right
-                                        0,                    // Bottom
-                                        resolution.second -1, // Top
-                                        pixels.get (),        // Buffer
-                                        false,                // HDR format flag
-                                        0);                   // The number of AOVs                                        
-    NIEPCE_CHECK_MSTATUS (status, "");
-    status = MRenderView::refresh (0,                      // Left
-                                   resolution.first - 1,   // Right
-                                   0,                      // Bottom
-                                   resolution.second - 1); // Top
-                                   NIEPCE_CHECK_MSTATUS (status, "");
+    MRenderView::doesRenderEditorExist ();
 
-    // Call endRender() to signal the Render View that all
-    // image data has been sent.
+    status = MRenderView::setCurrentCamera (path);
+    NIEPCE_CHECK_MSTATUS (status, "");
+
+    status = MRenderView::startRender (resolution.first - 1, resolution.second - 1);
+    NIEPCE_CHECK_MSTATUS (status, "");
+   
+    for (uint32_t y = 0; y < num_tiles_height; ++y)
+    {
+        for (uint32_t x = 0; x < num_tiles_width; ++x)
+        {            
+            const uint32_t left   = x * kTileSize;
+            const uint32_t right  = std::min ((x + 1) * kTileSize - 1, resolution.first - 1);
+            const uint32_t bottom = y * kTileSize;
+            const uint32_t top    = std::min ((y + 1) * kTileSize - 1, resolution.second - 1);
+
+            // MGlobal::displayInfo ( (std::to_string (left) + ", " + std::to_string (top) + ", " + std::to_string (right) + ", " + std::to_string (bottom)).c_str ());
+
+
+            status = MRenderView::updatePixels (left, right, bottom, top,
+                                                pixels.get (), // data
+                                                true, // HDR format flag
+                                                0);    // The number of AOVs
+            NIEPCE_CHECK_MSTATUS (status, "");
+
+            status = MRenderView::refresh (left, right, bottom, top);
+            NIEPCE_CHECK_MSTATUS (status, "");
+
+            Sleep (50);
+        }
+    }
+
     status = MRenderView::endRender ();
-    NIEPCE_CHECK_MSTATUS (status, "");   
+    NIEPCE_CHECK_MSTATUS (status, "");
+    /*
+    // ----------------------------------------------------------------------
+    // Render-view update test (end)
+    // ----------------------------------------------------------------------
+    */
+
+
+    /*    
+    // Get geometries from Maya, construct scene for niepce renderer
+    niepce::Scene scene;
+    NiepceRenderView::ConstructSceneForNiepce (&scene);
+    */
+    /*
+    // Sampler
+    std::shared_ptr <niepce::Sampler> sampler (std::make_shared <niepce::RandomSampler> ());   
+
+    // Integrator
+    niepce::MayaTracer tracer (path, camera, sampler);
+    tracer.Render (scene);    
+    */
+
+    return MStatus::kSuccess;
 }
 /*
 // ---------------------------------------------------------------------------
