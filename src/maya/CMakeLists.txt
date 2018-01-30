@@ -4,6 +4,7 @@ set (MAYA_SOURCE_FILES
   "renderer_command.cc"
   "render_view.cc"
   "maya_tracer.cc"
+  "accessor.cc"
 )
 
 find_package (Maya REQUIRED)

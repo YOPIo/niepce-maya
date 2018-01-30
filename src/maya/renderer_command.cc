@@ -1,6 +1,4 @@
-/*
-// ---------------------------------------------------------------------------
-// 
+﻿/*
 // ---------------------------------------------------------------------------
 */
 #include <maya/MDagPath.h>
@@ -16,17 +14,15 @@
 #include "renderer_command.h"
 #include "render_view.h"
 #include "maya_tracer.h"
+#include "accessor.h"
 /*
 // ---------------------------------------------------------------------------
 */
 #include "../camera/camera.h"
 #include "../sampler/random_sampler.h"
 #include "../scene/scene.h"
-/*
-// ---------------------------------------------------------------------------
-*/
-#define NOMINMAX
-#include <windows.h>
+#include "../sampler/random_sampler.h"
+#include "../integrator/path_tracer.h"
 /*
 // ---------------------------------------------------------------------------
 */
@@ -48,15 +44,26 @@ auto RendererCommand::doIt (const MArgList& args) -> MStatus
 {
     MStatus status;
 
-    // Get current camera
+    // Camera construction
+    // todo: カメラの実装が適当なので、修正する
     MDagPath path;
-    status = NiepceRenderView::GetRenderableCamera (&path);
-    NIEPCE_CHECK_MSTATUS (status, "Failed to get renderable camera.");
-    
-    // Create niepce::Camera for rendering
-    std::shared_ptr <niepce::Camera> camera
-        = NiepceRenderView::GetNiepceCamera (path, &status);
-    NIEPCE_CHECK_MSTATUS (status, "Faild to generate niepce::Camera.");
+    std::shared_ptr <niepce::Camera> camera;
+    status = niepce::ConstructCamera (&camera, &path);
+    NIEPCE_CHECK_MSTATUS (status, "Faild to construct a camera.");
+
+    // Sampler construction
+    std::shared_ptr <niepce::Sampler> sampler = niepce::CreateRandomSampler ();
+
+    // Primitive construction    
+    std::vector <niepce::IndividualPtr> primitives;
+    niepce::ConstructPrimitives (&primitives);
+
+    // Scene construction for niepce renderer
+    niepce::Scene scene (primitives);
+
+    // Integrator construction
+    std::shared_ptr <niepce::PathTracer> tracer
+        = std::make_shared <niepce::PathTracer> (camera, sampler, 8);
 
     /*
     // ----------------------------------------------------------------------
@@ -111,32 +118,12 @@ auto RendererCommand::doIt (const MArgList& args) -> MStatus
             status = MRenderView::refresh (left, right, bottom, top);
             NIEPCE_CHECK_MSTATUS (status, "");
 
-            Sleep (50);
+            // Sleep (50);
         }
     }
 
     status = MRenderView::endRender ();
     NIEPCE_CHECK_MSTATUS (status, "");
-    /*
-    // ----------------------------------------------------------------------
-    // Render-view update test (end)
-    // ----------------------------------------------------------------------
-    */
-
-
-    /*    
-    // Get geometries from Maya, construct scene for niepce renderer
-    niepce::Scene scene;
-    NiepceRenderView::ConstructSceneForNiepce (&scene);
-    */
-    /*
-    // Sampler
-    std::shared_ptr <niepce::Sampler> sampler (std::make_shared <niepce::RandomSampler> ());   
-
-    // Integrator
-    niepce::MayaTracer tracer (path, camera, sampler);
-    tracer.Render (scene);    
-    */
 
     return MStatus::kSuccess;
 }

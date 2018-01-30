@@ -98,7 +98,6 @@ auto NiepceRenderView::GetResolution () -> std::pair <uint32_t, uint32_t>
 }
 /*
 // ---------------------------------------------------------------------------
-*/
 auto NiepceRenderView::ConstructSceneForNiepce (niepce::Scene* scene) -> MStatus
 {    
     MStatus status;
@@ -269,6 +268,7 @@ auto NiepceRenderView::ConstructSceneForNiepce (niepce::Scene* scene) -> MStatus
 
     return status;
 }
+*/
 /*
 // ---------------------------------------------------------------------------
 // Find a renderable camera
@@ -334,7 +334,7 @@ auto NiepceRenderView::GetNiepceCamera
 }
 /*
 // ---------------------------------------------------------------------------
-*/
+
 auto NiepceRenderView::CreateTriangles
 (
     std::vector <niepce::ShapePtr>* triangles,
@@ -395,9 +395,9 @@ auto NiepceRenderView::CreateTriangles
                position_indices[3 * n + 1],
                position_indices[3 * n + 2]};
         const std::array <uint32_t, 3> n_idx_array
-            = {0 /* Todo : Implementation*/};
+            = {0};
         const std::array <uint32_t, 3> t_idx_array
-            = {0 /* Todo : Implementation*/};
+            = {0};
 
         triangles->at (n) = niepce::CreateTriangle (mesh,
                                                p_idx_array,
@@ -405,6 +405,7 @@ auto NiepceRenderView::CreateTriangles
                                                t_idx_array);
     }
 }
+*/
 /*
 // ---------------------------------------------------------------------------
 */

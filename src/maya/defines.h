@@ -9,6 +9,7 @@
 #include <maya/MStatus.h>
 #include <maya/MString.h>
 #include <maya/MFloatVector.h>
+#include <maya/MHWGeometry.h>
 /*
 // ---------------------------------------------------------------------------
 */
@@ -16,6 +17,14 @@
 #define NIEPCE_MAYA_VERSION_STRING "0.1.0"
 /*
 // ---------------------------------------------------------------------------
+*/
+#if defined (NIEPCE_FLOAT_IS_DOUBLE);
+    static const auto kNiepceRenderingQuality = MHWRender::MGeometry::kDouble;
+#else
+    static const auto kNiepceRenderingQuality = MHWRender::MGeometry::kFloat;
+#endif
+/*
+// ------------------------------------------------------------------------
 */
 #define NIEPCE_CHECK_MSTATUS(status, msg) \
 {\

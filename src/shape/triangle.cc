@@ -7,38 +7,145 @@ namespace niepce
 {
 /*
 // ---------------------------------------------------------------------------
-// TriangleMesh class
-// ---------------------------------------------------------------------------
 */
 TriangleMesh::TriangleMesh
 (
-    uint32_t _num_faces,
-    uint32_t _num_positions,
-    uint32_t _num_normals,
-    uint32_t _num_texcoords,
-    Point3f*  const _positions,
-    Normal3f* const _normals,
-    Point2f*  const _texcoord
+ Index num_faces,
+ const std::vector <Point3f>&  positions,
+ const std::vector <Normal3f>& normals,
+ const std::vector <Point2f>&  texcoords
 ) :
-    num_faces     (_num_faces),
-    num_positions (_num_positions),
-    num_normals   (_num_normals),
-    num_texcoords (_num_texcoords),
-    positions     (_positions),
-    normals       (_normals),
-    texcoords     (_texcoord)
-{}
+  num_faces_     (num_faces),
+  num_positions_ (positions.size ()),
+  num_normals_   (normals.size ()),
+  num_texcoords_ (texcoords.size ())
+{
+  positions_ = nullptr;
+  normals_   = nullptr;
+  texcoords_ = nullptr;
+
+  // Copy positions
+  if (num_positions_ > 0)
+  {
+    // Allocate memory
+    positions_.reset (new Point3f [num_positions_]);
+    for (Index i = 0; i < num_positions_; ++i)
+    {
+      positions_[i] = positions[i];
+    }
+  }
+
+  // Copy normals
+  if (num_normals_ > 0)
+  {
+    // Allocate memory
+    normals_.reset (new Normal3f [num_normals_]);
+    for (Index i = 0; i < num_normals_; ++i)
+    {
+      normals_[i] = normals[i];
+    }
+  }
+
+  // Copy texcoords
+  if (num_texcoords_ > 0)
+  {
+    // Allocate memory
+    texcoords_.reset (new Point2f [num_normals_]);
+    for (Index i = 0; i < num_texcoords_; ++i)
+    {
+      texcoords_[i] = texcoords[i];
+    }
+  }
+}
 /*
 // ---------------------------------------------------------------------------
-// Triangle class
+*/
+auto TriangleMesh::GetPosition (Index idx) const -> Point3f
+{
+  if (idx < num_positions_)
+  {
+    return positions_[idx];
+  }
+  throw std::out_of_range ("Out of range.");
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto TriangleMesh::GetNormal (Index idx) const -> Normal3f
+{
+  if (normals_ == nullptr)
+  {
+    return Normal3f (0, 1, 0);
+  }
+
+  if (idx < num_normals_)
+  {
+    return normals_[idx];
+  }
+  throw std::out_of_range ("Out of range.");
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto TriangleMesh::GetTexcoord (Index idx) const -> Point2f
+{
+  if (texcoords_ == nullptr)
+  {
+    return Point2f::Zero ();
+  }
+
+  if (idx < num_texcoords_)
+  {
+    return texcoords_[idx];
+  }
+  throw std::out_of_range ("Out of range.");
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto TriangleMesh::NumPosition () const -> Index
+{
+  return num_positions_;
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto TriangleMesh::NumNormal () const -> Index
+{
+  return num_normals_;
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto TriangleMesh::NumTexcoord () const -> Index
+{
+  return num_texcoords_;
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto TriangleMesh::NumFaces () const -> Index
+{
+  return num_faces_;
+}
+/*
+// ---------------------------------------------------------------------------
+*/
+auto TriangleMesh::ToString () const -> std::string
+{
+  return "";
+}
+/*
+// ---------------------------------------------------------------------------
+// Triangle
 // ---------------------------------------------------------------------------
 */
 Triangle::Triangle
 (
- const std::shared_ptr <TriangleMesh>& mesh,
- const std::array <uint32_t, 3>& pos,
- const std::array <uint32_t, 3>& nor,
- const std::array <uint32_t, 3>& tex
+ const std::shared_ptr<TriangleMesh>& mesh,
+ const std::array <Index, 3>& pos,
+ const std::array <Index, 3>& nor,
+ const std::array <Index, 3>& tex
 ) :
   mesh_    (mesh),
   pos_idx_ (pos),
@@ -51,11 +158,10 @@ Triangle::Triangle
 */
 auto Triangle::SurfaceArea() const -> Float
 {
-    const Point3f& p0 (mesh_->positions[pos_idx_[0]]);
-    const Point3f& p1 (mesh_->positions[pos_idx_[1]]);
-    const Point3f& p2 (mesh_->positions[pos_idx_[2]]);
-
-    return 0.5 * Cross (p1 - p0, p2 - p0).Length();
+  const Point3f& p0 (mesh_->GetPosition (pos_idx_[0]));
+  const Point3f& p1 (mesh_->GetPosition (pos_idx_[1]));
+  const Point3f& p2 (mesh_->GetPosition (pos_idx_[2]));
+  return 0.5 * Cross(p1 - p0, p2 - p0).Length();
 }
 /*
 // ---------------------------------------------------------------------------
@@ -71,10 +177,10 @@ auto Triangle::LocalBounds () const -> Bounds3f
 */
 auto Triangle::WorldBounds () const -> Bounds3f
 {
-    const Point3f& p0 (mesh_->positions[pos_idx_[0]]);
-    const Point3f& p1 (mesh_->positions[pos_idx_[1]]);
-    const Point3f& p2 (mesh_->positions[pos_idx_[2]]);
-    return Bounds3f ({p0, p1, p2});
+  const Point3f& p0 (mesh_->GetPosition (pos_idx_[0]));
+  const Point3f& p1 (mesh_->GetPosition (pos_idx_[1]));
+  const Point3f& p2 (mesh_->GetPosition (pos_idx_[2]));
+  return Bounds3f ({p0, p1, p2});
 }
 /*
 // ---------------------------------------------------------------------------
@@ -89,9 +195,9 @@ auto Triangle::IsIntersect
 const -> bool
 {
   // Get vertices which representing a triangle face
-  const Point3f& p0 (mesh_->positions[pos_idx_[0]]);
-  const Point3f& p1 (mesh_->positions[pos_idx_[1]]);
-  const Point3f& p2 (mesh_->positions[pos_idx_[2]]);
+  const Point3f& p0 (mesh_->GetPosition (pos_idx_[0]));
+  const Point3f& p1 (mesh_->GetPosition (pos_idx_[1]));
+  const Point3f& p2 (mesh_->GetPosition (pos_idx_[2]));
 
 
   // Find vectors for two edges sharing vertex0
@@ -138,9 +244,9 @@ const -> bool
   const Vector3f outgoing = Normalize (-ray.direction);
 
   // Get UV coordinate, if present
-  const Point2f uv0 (GetTexcoord (0));
-  const Point2f uv1 (GetTexcoord (1));
-  const Point2f uv2 (GetTexcoord (2));
+  const Point2f uv0 (mesh_->GetTexcoord (tex_idx_[0]));
+  const Point2f uv1 (mesh_->GetTexcoord (tex_idx_[1]));
+  const Point2f uv2 (mesh_->GetTexcoord (tex_idx_[2]));
 
   // Compute the texcoord
   const Float   uv (1.0 - u - v);
@@ -186,9 +292,9 @@ auto Triangle::Sample (const Sample2f& sample) const -> Interaction
   const Point2f b (SampleUniformTriangle (sample));
 
   // Get triangle vertices
-  const Point3f& p0 (mesh_->positions[pos_idx_[0]]);
-  const Point3f& p1 (mesh_->positions[pos_idx_[1]]);
-  const Point3f& p2 (mesh_->positions[pos_idx_[2]]);
+  const Point3f& p0 (mesh_->GetPosition (pos_idx_[0]));
+  const Point3f& p1 (mesh_->GetPosition (pos_idx_[1]));
+  const Point3f& p2 (mesh_->GetPosition (pos_idx_[2]));
 
   Interaction it;
   it.position = b[0] * p0 + b[1] * p1 + (1 - b[0] - b[1]) * p2;
@@ -216,23 +322,6 @@ auto Triangle::Sample (const Sample2f& sample) const -> Interaction
 /*
 // ---------------------------------------------------------------------------
 */
-auto Triangle::GetTexcoord (uint32_t idx) const -> Point2f
-{
-    if (mesh_->texcoords == nullptr)
-    {
-        return Point2f::Zero ();
-    }
-
-    if  (0 <= idx && idx <= 2)
-    {
-        return mesh_->texcoords [tex_idx_[idx]];
-    }
-
-    return Point2f::Zero ();
-}
-/*
-// ---------------------------------------------------------------------------
-*/
 auto Triangle::Pdf () const -> Float
 {
   return 1.0 / SurfaceArea ();
@@ -242,7 +331,12 @@ auto Triangle::Pdf () const -> Float
 */
 auto Triangle::ToString () const -> std::string
 {
-  std::string str ("Triangle Shape");
+  std::string str ("");
+
+  const Point3f& p0 (mesh_->GetPosition (pos_idx_[0]));
+  const Point3f& p1 (mesh_->GetPosition (pos_idx_[1]));
+  const Point3f& p2 (mesh_->GetPosition (pos_idx_[2]));
+
   return str;
 }
 /*
@@ -250,40 +344,32 @@ auto Triangle::ToString () const -> std::string
 */
 auto CreateTriangleMesh
 (
-    uint32_t num_faces,
-    uint32_t num_positions,
-    uint32_t num_normals,
-    uint32_t num_texcoords,
-    Point3f*  const positions,
-    Normal3f* const normals,
-    Point2f*  const texcoord
+ Index num_faces,
+ const std::vector <Point3f>&  positions,
+ const std::vector <Normal3f>& normals,
+ const std::vector <Point2f>&  texcoords
 )
 -> std::shared_ptr <TriangleMesh>
 {
-    return std::make_shared <TriangleMesh> (num_faces,
-                                            num_positions,
-                                            num_normals,
-                                            num_texcoords,
-                                            positions,
-                                            normals,
-                                            texcoord);
+  const std::shared_ptr <TriangleMesh> mesh
+    (std::make_shared <TriangleMesh> (num_faces, positions, normals, texcoords));
+  return std::move (mesh);
 }
 /*
 // ---------------------------------------------------------------------------
 */
 auto CreateTriangle
 (
-    const std::shared_ptr <TriangleMesh>& mesh_ptr,
-    const std::array <uint32_t, 3>& position_idxs,
-    const std::array <uint32_t, 3>& normal_idxs,
-    const std::array <uint32_t, 3>& texcoord_idxs
+ const std::shared_ptr <TriangleMesh>& mesh,
+ const std::array <Index, 3>& p_idx,
+ const std::array <Index, 3>& n_idx,
+ const std::array <Index, 3>& t_idx
 )
--> std::shared_ptr <Triangle>
+-> std::shared_ptr<Triangle>
 {
-    return std::make_shared <Triangle> (mesh_ptr,
-                                        position_idxs,
-                                        normal_idxs,
-                                        texcoord_idxs);
+  const std::shared_ptr <Triangle> tri
+    (std::make_shared <Triangle> (mesh, p_idx, n_idx, t_idx));
+  return std::move (tri);
 }
 /*
 // ---------------------------------------------------------------------------

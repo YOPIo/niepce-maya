@@ -47,7 +47,7 @@ public:
     static auto GetResolution () -> std::pair <uint32_t, uint32_t>;
       
     //  
-    static auto ConstructSceneForNiepce (niepce::Scene* scene) -> MStatus;
+    // static auto ConstructSceneForNiepce (niepce::Scene* scene) -> MStatus;
 
     // Get first renderable camera
     //  - MStatus::kSuccess : Found renderable camera
@@ -63,6 +63,7 @@ public:
 
     /* NiepceRenderView private methods */
 private:
+    /*
     static auto CreateTriangles
     (
         std::vector <niepce::ShapePtr>* triangles,
@@ -78,6 +79,7 @@ private:
         const std::vector <uint32_t>& texcoord_indices
     )
     -> void;   
+    */
 };
 /*
 // ---------------------------------------------------------------------------

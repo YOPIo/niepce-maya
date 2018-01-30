@@ -4,7 +4,9 @@
 // ---------------------------------------------------------------------------
 */
 #include "shape.h"
+#include "vertex.h"
 #include "../core/geometry.h"
+#include "../core/object.h"
 /*
 // ---------------------------------------------------------------------------
 */
@@ -15,50 +17,89 @@ namespace niepce
 // Forward decralations in this header
 // ---------------------------------------------------------------------------
 */
-struct TriangleMesh;
-class  Triangle;
+class TriangleMesh;
+class Triangle;
+/*
+// ---------------------------------------------------------------------------
+*/
+auto CreateTriangleMesh
+(
+ Index num_faces,
+ const std::vector <Point3f>&  positions,
+ const std::vector <Normal3f>& normals   = {},
+ const std::vector <Point2f>&  texcoords = {}
+)
+-> std::shared_ptr<TriangleMesh>;
+/*
+// ---------------------------------------------------------------------------
+*/
+auto CreateTriangle
+(
+ const std::shared_ptr <TriangleMesh>& mesh,
+ const std::array <Index, 3>& pos_idx,
+ const std::array <Index, 3>& nor_idx = {0, 0, 0},
+ const std::array <Index, 3>& tex_idx = {0, 0, 0}
+)
+-> std::shared_ptr<Triangle>;
 /*
 // ---------------------------------------------------------------------------
 // TriangleMesh
 // ---------------------------------------------------------------------------
 */
-struct TriangleMesh
+class TriangleMesh : public Object
 {
-    /* TriangleMesh constructors */
-    TriangleMesh () = delete;
-    TriangleMesh
-    (
-        uint32_t num_faces,
-        uint32_t num_positions,
-        uint32_t num_normals,
-        uint32_t num_texcoords,
-        Point3f*  const positions,
-        Normal3f* const normals,
-        Point2f*  const texcoord
-    );
+  /* TriangleMesh constructors */
+public:
+  TriangleMesh () = delete;
+  TriangleMesh
+  (
+   Index num_faces,
+   const std::vector <Point3f>&  position,
+   const std::vector <Normal3f>& normals,
+   const std::vector <Point2f>&  texcoords
+  );
 
 
-    /* TriangleMesh destructor */
-    virtual ~TriangleMesh () = default;
+  /* TriangleMesh destructor */
+public:
+  virtual ~TriangleMesh () = default;
 
 
-    /* TriangleMesh public operators*/
-    TriangleMesh (const TriangleMesh&  tri) = delete;
-    TriangleMesh (      TriangleMesh&& tri) = default;
+  /* TriangleMesh public operators*/
+public:
+  TriangleMesh (const TriangleMesh&  tri) = default;
+  TriangleMesh (      TriangleMesh&& tri) = default;
 
-    auto operator = (const TriangleMesh&  tri) -> TriangleMesh& = delete;
-    auto operator = (      TriangleMesh&& tri) -> TriangleMesh& = default;
+  auto operator = (const TriangleMesh&  tri) -> TriangleMesh& = default;
+  auto operator = (      TriangleMesh&& tri) -> TriangleMesh& = default;
 
 
-    /* TriangleMesh public data */
-    const uint32_t num_faces;
-    const uint32_t num_positions;
-    const uint32_t num_normals;
-    const uint32_t num_texcoords;
+  /* TriangleMesh public methods */
+public:
+  auto GetPosition (Index idx) const -> Point3f;
+  auto GetNormal   (Index idx) const -> Normal3f;
+  auto GetTexcoord (Index idx) const -> Point2f;
 
-    const std::unique_ptr <Point3f []>  positions;
-    const std::unique_ptr <Normal3f []> normals;
-    const std::unique_ptr <Point2f []>  texcoords;
+  auto NumPosition () const -> Index;
+  auto NumNormal   () const -> Index;
+  auto NumTexcoord () const -> Index;
+  auto NumFaces    () const -> Index;
+
+
+  /* Triangle public override method */
+public:
+  auto ToString () const -> std::string override final;
+
+  /* TriangleMesh private data */
+private:
+  const Index num_faces_;
+  const Index num_positions_;
+  const Index num_normals_;
+  const Index num_texcoords_;
+
+  std::unique_ptr <Point3f []>  positions_;
+  std::unique_ptr <Normal3f []> normals_;
+  std::unique_ptr <Point2f []>  texcoords_;
 }; // class TriangleMesh
 /*
 // ---------------------------------------------------------------------------
@@ -73,9 +114,9 @@ public:
   Triangle
   (
    const std::shared_ptr<TriangleMesh>& mesh,
-   const std::array <uint32_t, 3>& pos,
-   const std::array <uint32_t, 3>& nor,
-   const std::array <uint32_t, 3>& tex
+   const std::array <Index, 3>& pos,
+   const std::array <Index, 3>& nor,
+   const std::array <Index, 3>& tex
   );
 
 
@@ -120,52 +161,14 @@ public:
 
   auto ToString () const -> std::string override final;
 
-  // Debug methods
-  auto GetPosition () const -> std::tuple <Point3f, Point3f, Point3f>
-  {  
-    return std::make_tuple (mesh_->positions[pos_idx_[0]],
-                            mesh_->positions[pos_idx_[1]],
-                            mesh_->positions[pos_idx_[2]]);
-  }
-
-
-  /* Triangle private method */
-private:
-    auto GetTexcoord (uint32_t idx) const -> Point2f;
-
 
   /* Triangle private data */
 public:
-  std::shared_ptr <TriangleMesh> mesh_;
-  std::array <uint32_t, 3> pos_idx_;
-  std::array <uint32_t, 3> nor_idx_;
-  std::array <uint32_t, 3> tex_idx_;
+  const std::shared_ptr <TriangleMesh> mesh_;
+  const std::array <Index, 3> pos_idx_;
+  const std::array <Index, 3> nor_idx_;
+  const std::array <Index, 3> tex_idx_;
 }; // class Triangle
-/*
-// ---------------------------------------------------------------------------
-*/
-auto CreateTriangleMesh
-(
-    uint32_t num_faces,
-    uint32_t num_positions,
-    uint32_t num_normals,
-    uint32_t num_texcoords,
-    Point3f*  const positions,
-    Normal3f* const normals,
-    Point2f*  const texcoord
-)
--> std::shared_ptr <TriangleMesh>;
-/*
-// ---------------------------------------------------------------------------
-*/
-auto CreateTriangle
-(
-    const std::shared_ptr <TriangleMesh>& mesh_ptr,
-    const std::array <uint32_t, 3>& position_idxs,
-    const std::array <uint32_t, 3>& normal_idxs,
-    const std::array <uint32_t, 3>& texcoord_idxs
-)
--> std::shared_ptr <Triangle>;
 /*
 // ---------------------------------------------------------------------------
 */
