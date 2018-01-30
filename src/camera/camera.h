@@ -27,7 +27,7 @@ class Camera
     const Vector3f& direction,
     const Vector3f& up
   )
-  {
+  {      
       Vector3f u, v, w;
       Float theta = 45.0 * kPi / 180.0;
       Float half_height = std::tan (theta / 2);
@@ -62,6 +62,7 @@ class Camera
 
     origin_ = position;
     w = Normalize (position - lookat);
+    w = Normalize (Vector3f (-1.0 * lookat));
     u = Normalize (Cross (vup, w));
     v = Cross (w, u);
 

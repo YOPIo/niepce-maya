@@ -18,6 +18,7 @@
 /*
 // ---------------------------------------------------------------------------
 */
+#include "../accelerator/bvh.h"
 #include "../camera/camera.h"
 #include "../sampler/random_sampler.h"
 #include "../scene/scene.h"
@@ -49,7 +50,7 @@ auto RendererCommand::doIt (const MArgList& args) -> MStatus
     MDagPath path;
     std::shared_ptr <niepce::Camera> camera;
     status = niepce::ConstructCamera (&camera, &path);
-    NIEPCE_CHECK_MSTATUS (status, "Faild to construct a camera.");
+    NIEPCE_CHECK_MSTATUS (status, "Faild to construct a camera.");    
 
     // Sampler construction
     std::shared_ptr <niepce::Sampler> sampler = niepce::CreateRandomSampler ();
@@ -58,18 +59,25 @@ auto RendererCommand::doIt (const MArgList& args) -> MStatus
     std::vector <niepce::IndividualPtr> primitives;
     niepce::ConstructPrimitives (&primitives);
 
+    // MGlobal::displayInfo (primitives[0]->GetShape()->ToString ().c_str());
+    // MGlobal::displayInfo (primitives[1]->GetShape()->ToString ().c_str());
+    // MGlobal::displayInfo ( std::to_string (primitives.size ()).c_str ());
+
     // Scene construction for niepce renderer
-    niepce::Scene scene (primitives);
+    niepce::Scene scene (primitives, niepce::AcceleratorType::kNone);    
 
     // Integrator construction
-    std::shared_ptr <niepce::PathTracer> tracer
-        = std::make_shared <niepce::PathTracer> (camera, sampler, 8);
+    std::shared_ptr <niepce::MayaTracer> tracer
+        = std::make_shared <niepce::MayaTracer> (path, camera, sampler);
+
+    // begin rendering
+    tracer->Render (scene);
 
     /*
     // ----------------------------------------------------------------------
     // Render-view update test (start)
     // ----------------------------------------------------------------------
-    */
+    
     constexpr uint32_t kTileSize = 32;
     const auto resolution = NiepceRenderView::GetResolution ();
 
@@ -124,6 +132,7 @@ auto RendererCommand::doIt (const MArgList& args) -> MStatus
 
     status = MRenderView::endRender ();
     NIEPCE_CHECK_MSTATUS (status, "");
+    */
 
     return MStatus::kSuccess;
 }

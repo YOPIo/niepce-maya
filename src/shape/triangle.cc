@@ -133,7 +133,7 @@ auto TriangleMesh::NumFaces () const -> Index
 */
 auto TriangleMesh::ToString () const -> std::string
 {
-  return "";
+    return "";
 }
 /*
 // ---------------------------------------------------------------------------
@@ -158,9 +158,9 @@ Triangle::Triangle
 */
 auto Triangle::SurfaceArea() const -> Float
 {
-  const Point3f& p0 (mesh_->GetPosition (pos_idx_[0]));
-  const Point3f& p1 (mesh_->GetPosition (pos_idx_[1]));
-  const Point3f& p2 (mesh_->GetPosition (pos_idx_[2]));
+    const Point3f& p0 (mesh_->GetPosition (pos_idx_[0]));
+    const Point3f& p1 (mesh_->GetPosition (pos_idx_[1]));
+    const Point3f& p2 (mesh_->GetPosition (pos_idx_[2]));
   return 0.5 * Cross(p1 - p0, p2 - p0).Length();
 }
 /*
@@ -330,13 +330,11 @@ auto Triangle::Pdf () const -> Float
 // ---------------------------------------------------------------------------
 */
 auto Triangle::ToString () const -> std::string
-{
-  std::string str ("");
-
-  const Point3f& p0 (mesh_->GetPosition (pos_idx_[0]));
-  const Point3f& p1 (mesh_->GetPosition (pos_idx_[1]));
-  const Point3f& p2 (mesh_->GetPosition (pos_idx_[2]));
-
+{  
+  Point3f p0 (mesh_->GetPosition (pos_idx_[0]));
+  Point3f p1 (mesh_->GetPosition (pos_idx_[1]));
+  Point3f p2 (mesh_->GetPosition (pos_idx_[2])); 
+  const std::string str ("[" + p0.ToString () + "," + p1.ToString () + ", " + p2.ToString() + "]");
   return str;
 }
 /*
